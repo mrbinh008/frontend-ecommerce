@@ -5,10 +5,10 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
-import { Layout, Menu, theme, Dropdown, Flex, Button, Avatar, message } from 'antd';
+import { Layout, Menu, theme, Dropdown, Flex, Avatar, ConfigProvider, App } from 'antd';
 import { Outlet, useNavigate } from 'react-router';
 import { useAppDispatch, useAppSelector } from '@/redux/hook';
-import { logoutSuccess, postLogout } from '@/redux/admin/auth.slice';
+import { postLogout } from '@/redux/admin/auth.slice';
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -40,6 +40,7 @@ const menu: MenuItem[] = [
     getItem('Danh sách thể loại', 'categories', <FormOutlined />),
   ]),
   getItem('Sản phẩm', 'Product', <FormOutlined />, [
+    getItem('Danh sách sản phẩm', 'product', <FormOutlined />),
     getItem('Tạo mới sản phẩm', 'product/create', <FormOutlined />),
   ]),
 ];
@@ -78,35 +79,39 @@ const AdminLayout: React.FC = () => {
   }
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Sider collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)}>
-        <div className="demo-logo-vertical">
-          <img src="https://gw.alipayobjects.com/zos/antfincdn/PmY%24TNNDBI/logo.svg" alt="logo" style={{ width: "50px" }} />
-        </div>
-        <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline" items={menu} onClick={onClick} />
-      </Sider>
-      <Layout>
-        <Header style={{ padding: 0, background: colorBgContainer }}>
-          <Flex justify='flex-end' style={{ marginRight: "50px" }}>
-            <Dropdown menu={{ items }} trigger={['click']}>
-              <a className="ant-dropdown-link" onClick={(e) => e.preventDefault()}>
-                <Avatar
-                  style={{ border: "1px solid #333333", width: "35px", height: "35px" }}
-                  src={avatar}
-                  icon={<UserOutlined />}
-                />
-              </a>
-            </Dropdown>
-          </Flex>
-        </Header>
-        <Content style={{ margin: '0 16px' }}>
-          <Outlet />
-        </Content>
-        <Footer style={{ textAlign: 'center' }}>
-           ©{new Date().getFullYear()} Created by Mr Binh
-        </Footer>
-      </Layout>
-    </Layout>
+    <ConfigProvider>
+      <App>
+        <Layout style={{ minHeight: '100vh' }}>
+          <Sider collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)}>
+            <div className="demo-logo-vertical">
+              <img src="https://gw.alipayobjects.com/zos/antfincdn/PmY%24TNNDBI/logo.svg" alt="logo" style={{ width: "50px" }} />
+            </div>
+            <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline" items={menu} onClick={onClick} />
+          </Sider>
+          <Layout>
+            <Header style={{ padding: 0, background: colorBgContainer }}>
+              <Flex justify='flex-end' style={{ marginRight: "50px" }}>
+                <Dropdown menu={{ items }} trigger={['click']}>
+                  <a className="ant-dropdown-link" onClick={(e) => e.preventDefault()}>
+                    <Avatar
+                      style={{ border: "1px solid #333333", width: "35px", height: "35px" }}
+                      src={avatar}
+                      icon={<UserOutlined />}
+                    />
+                  </a>
+                </Dropdown>
+              </Flex>
+            </Header>
+            <Content style={{ margin: '0 16px' }}>
+              <Outlet />
+            </Content>
+            <Footer style={{ textAlign: 'center' }}>
+              ©{new Date().getFullYear()} Created by Mr Binh
+            </Footer>
+          </Layout>
+        </Layout>
+      </App>
+    </ConfigProvider>
   );
 };
 

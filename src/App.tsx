@@ -9,6 +9,8 @@ import PrivateRoutes from './routes/private.route';
 import Brand from '@pages/admin/brand';
 import Categories from './pages/admin/categories';
 import ProductCreatePage from './pages/admin/product/product.create';
+import Product from './pages/admin/product/product.table';
+import ProductEditPage from './pages/admin/product/product.edit';
 
 
 const App: React.FC = () => {
@@ -26,7 +28,9 @@ const App: React.FC = () => {
           <Route path="customer" element={<Customer />} />
           <Route path="brand" element={<Brand />} />
           <Route path="categories" element={<Categories />} />
+          <Route path="product" element={<Product />} />
           <Route path="product/create" element={<ProductCreatePage />} />
+          <Route path="product/:id/edit" element={<ProductEditPage />} />
 
         </Route>
         <Route path="admin/login" element={<Login />} />

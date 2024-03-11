@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CloseOutlined, PlusCircleOutlined, PlusOutlined } from '@ant-design/icons';
-import { Button, Card, Col, Form, Input, InputNumber, Row, Select, Space, Typography, Modal, Upload } from 'antd';
+import { Button, Card, Col, Form, Input, InputNumber, Row, Select, Space, Typography, Modal, Upload, App } from 'antd';
 import TextArea from 'antd/es/input/TextArea';
-import { IOption, IProduct, IProductPayload, ISku, ISkuValue } from '@interface/admin.product';
+import { IOption, IProductPayload, IProductProps, ISku, ISkuValue } from '@interface/admin.product';
 import SubmitButton from '@components/button/submit';
 import { v4 as uuidv4 } from 'uuid';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { storeProduct } from '@/services/admin/product.service';
-import { fetchAllBrand, fetchBrand } from '@/services/admin/brand.service';
+import { fetchBrand } from '@/services/admin/brand.service';
 import { fetchCategoriesParent } from '@/services/admin/categories.service';
 import type { GetProp, UploadFile, UploadProps } from 'antd';
 
@@ -80,13 +80,16 @@ const normFile = (e: any) => {
     return e?.fileList;
 };
 
-const ProductForm: React.FC = () => {
+const ProductForm = (props: IProductProps) => {
+    const { product } = props;
     const [previewOpen, setPreviewOpen] = useState(false);
     const [previewImage, setPreviewImage] = useState('');
     const [previewTitle, setPreviewTitle] = useState('');
     const [fileList, setFileList] = useState<UploadFile[]>([]);
     const handleCancel = () => setPreviewOpen(false);
-
+    const { message } = App.useApp();
+    const [form] = Form.useForm();
+    const skuValue = generateSkuValue();
     const handlePreview = async (file: UploadFile) => {
         if (!file.url && !file.preview) {
             file.preview = await getBase64(file.originFileObj as FileType);
@@ -97,9 +100,9 @@ const ProductForm: React.FC = () => {
         setPreviewTitle(file.name || file.url!.substring(file.url!.lastIndexOf('/') + 1));
     };
 
-    const handleChange: UploadProps['onChange'] = ({ fileList: newFileList }) => {
-        setFileList(newFileList);
-    };
+    // const handleChange: UploadProps['onChange'] = ({ fileList: newFileList }) => {
+    //     setFileList(newFileList);
+    // };
     const uploadButton = (
         <button style={{ border: 0, background: 'none' }} type="button">
             <PlusOutlined />
@@ -107,40 +110,47 @@ const ProductForm: React.FC = () => {
         </button>
     );
 
+    useEffect(() => {
+        if (product) {
+            form.setFieldsValue(product);
+            console.log(product);
+        }
+    }, [product,form]);
 
 
-    const [form] = Form.useForm();
-    const skuValue = generateSkuValue();
     const makeVariant = () => {
         const skus = generateSkus(form.getFieldValue('options'), skuValue);
         form.setFieldsValue({ skus });
     }
-    const onFinish = (values: IProduct) => {
-        const payload: IProductPayload = {
-            id: values.id,
-            product_name: values.product_name,
-            sku: values.sku,
-            brand_id: values.brand_id,
-            description: values.description,
-            short_description: values.short_description,
-            product_weight: values.product_weight,
-            is_published: values.is_published,
-            is_featured: values.is_featured,
-            options: values.options,
-            skus: values.skus,
-            category: values.category
+    const onFinish = (values: IProductPayload) => {
+        const formdata = new FormData();
+        formdata.append('product_name', values.product_name);
+        formdata.append('sku', values.sku);
+        formdata.append('brand_id', values.brand_id.toString());
+        formdata.append('description', values.description);
+        formdata.append('short_description', values.short_description);
+        if (values.product_weight) {
+            formdata.append('product_weight', values.product_weight.toString());
         }
-        createNewProduct.mutate(payload);
+        formdata.append('is_published', values.is_published.toString());
+        formdata.append('is_featured', values.is_featured.toString());
+        if (values.image && values.image.length > 0) {
+            formdata.append('image[]', values.image[0].originFileObj);
+        }
+        formdata.append('category', JSON.stringify(values.category));
+        formdata.append('options', JSON.stringify(values.options));
+        formdata.append('skus', JSON.stringify(values.skus));
+        createNewProduct.mutate(formdata);
     }
 
     const createNewProduct = useMutation({
-        mutationFn: async (data: IProductPayload) => await storeProduct(data),
+        mutationFn: async (data: FormData) => await storeProduct(data),
         onSuccess: () => {
             form.resetFields();
-            // messageApi.success('Tạo mới thương hiệu thành công');
+            message.success('Tạo mới sản phẩm thành công');
         },
         onError: () => {
-            // messageApi.error('An error has occurred');
+            message.error('Đã có lỗi xảy ra khi tạo mới sản phẩm');
         },
     })
 
@@ -271,16 +281,17 @@ const ProductForm: React.FC = () => {
                         </Form.Item>
                     </Col>
                 </Row>
-                <Form.Item label="Hình ảnh" name="image" 
+                <Form.Item label="Hình ảnh" name="image"
                     valuePropName="fileList" getValueFromEvent={normFile}
                 >
                     <Upload
-                        action={import.meta.env.VITE_API_URL + 'media'}
+                        // action={import.meta.env.VITE_API_URL + 'media'}
+                        name='image'
                         listType="picture-card"
-                        fileList={fileList}
                         accept='image/*'
                         onPreview={handlePreview}
-                        onChange={handleChange}
+                        fileList={fileList}
+                        beforeUpload={() => false}
                     >
                         {fileList.length >= 1 ? null : uploadButton}
                     </Upload>
@@ -457,11 +468,13 @@ const ProductForm: React.FC = () => {
                                             valuePropName="fileList" getValueFromEvent={normFile}
                                         >
                                             <Upload
-                                                action={import.meta.env.VITE_API_URL + 'media'}
+                                                // action={import.meta.env.VITE_API_URL + 'media'}
+                                                name='image'
                                                 listType="picture-card"
                                                 multiple
                                                 accept='image/*'
                                                 onPreview={handlePreview}
+                                                beforeUpload={() => false}
                                             >
                                                 {fileList.length >= 5 ? null : uploadButton}
                                             </Upload>
@@ -475,13 +488,13 @@ const ProductForm: React.FC = () => {
                 <Form.Item>
                     <SubmitButton form={form}>Lưu</SubmitButton>
                 </Form.Item>
-                <Form.Item noStyle shouldUpdate>
+                {/* <Form.Item noStyle shouldUpdate>
                     {() => (
                         <Typography>
                             <pre>{JSON.stringify(form.getFieldsValue(), null, 2)}</pre>
                         </Typography>
                     )}
-                </Form.Item>
+                </Form.Item> */}
             </Form >
             <Modal open={previewOpen} title={previewTitle} footer={null} onCancel={handleCancel}>
                 <img alt="example" style={{ width: '100%' }} src={previewImage} />
