@@ -61,6 +61,7 @@ export interface ISku {
     sku: string,
     price: number,
     quantity: number,
+    image: [],
     values: ISkuValue[],
 }
 
@@ -72,9 +73,6 @@ export interface ISkuValue {
 }
 
 export interface IProductProps {
-    product: IProductPayload,
-    // loading: boolean,
-    // error: null | string | object,
-    // message: null | string,
+    product?: IProductPayload
 }
 

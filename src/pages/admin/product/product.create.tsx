@@ -3,6 +3,7 @@ import { Breadcrumb, Space } from "antd";
 import { HomeOutlined, ProductOutlined } from '@ant-design/icons';
 
 const ProductCreatePage = () => {
+    document.title = "Thêm mới sản phẩm";
     return (
         <>
             <Space direction="vertical" style={{width:"100%"}} size="large">

@@ -22,6 +22,14 @@ export function storeProduct(data: FormData) {
     });
 }
 
+export function updateProduct(data: FormData) {
+    return axios.post('admin/product?_method=PUT', data, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+}
+
 export function changeStatusProduct(id: number) {
     return axios.patch(`admin/product/change-status/${id}`);
 }
@@ -30,4 +38,7 @@ export function changeFeaturedProduct(id: number) {
 }
 export function deleteProduct(id: number) {
     return axios.delete(`admin/product/${id}`);
+}
+export function deleteImageProduct(id: number) {
+    return axios.delete(`media/${id}`);
 }
